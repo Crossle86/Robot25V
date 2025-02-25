@@ -266,10 +266,6 @@ public class DriveBase extends SubsystemBase {
   @Override
   public void simulationPeriodic()
   {
-    // We are not using this call now because the REV simulation does not work
-    // correctly. Will leave the code in place in case this issue gets fixed.
-    //if (robot.isEnabled()) REVPhysicsSim.getInstance().run();
-
     // want to simulate navX gyro changing as robot turns
     // information available is radians per second and this happens every 20ms
     // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi

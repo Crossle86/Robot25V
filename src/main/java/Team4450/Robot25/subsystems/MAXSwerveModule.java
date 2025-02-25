@@ -55,7 +55,6 @@ public class MAXSwerveModule implements Sendable {
 
   private double            chassisAngularOffset = 0, lastDrivePIDReference = 0;
 
-  private double            currentSimVelocity = 0, currentSimPosition = 0, currentSimAngle = 0;
   public String             moduleLocation;
   private Pose2d            pose;
   private Translation2d     translation2d;
@@ -154,11 +153,6 @@ public class MAXSwerveModule implements Sendable {
     
     if (RobotBase.isSimulation()) 
     {
-      // Note that the REV simulation does not work correctly. We have hacked
-      // a solution where we drive the sim through our code, not by reading the
-      // REV simulated encoder position and velocity, which are incorrect. However, 
-      // registering the motor controller with the REV sim is still needed.
-
       turningSim = new SparkSim(turningSparkMax, DCMotor.getNeo550(1));
   
       drivingSim = new SparkSim(drivingSparkFlex, DCMotor.getNeoVortex(1));
@@ -174,12 +168,8 @@ public class MAXSwerveModule implements Sendable {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
 
-    if (RobotBase.isReal())
-      return new SwerveModuleState(drivingEncoder.getVelocity(),
-          new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset));
-    else
-      return new SwerveModuleState(currentSimVelocity,
-          new Rotation2d(currentSimAngle - chassisAngularOffset));
+    return new SwerveModuleState(drivingEncoder.getVelocity(),
+           new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset));
   } 
 
   /**
@@ -190,18 +180,10 @@ public class MAXSwerveModule implements Sendable {
   public SwerveModulePosition getPosition() {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
-    SwerveModulePosition  position;
 
-    if (RobotBase.isReal())
-      position = new SwerveModulePosition(
+    return new SwerveModulePosition(
           drivingEncoder.getPosition(),
           new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset));
-    else
-      position = new SwerveModulePosition(
-          currentSimPosition,
-          new Rotation2d(currentSimAngle - chassisAngularOffset));
-    
-    return position;
   }
 
   /**
@@ -224,13 +206,12 @@ public class MAXSwerveModule implements Sendable {
     
     turningPIDController.setReference(desiredState.angle.getRadians(), SparkMax.ControlType.kPosition);
 
-    currentSimAngle = desiredState.angle.getRadians();
-
-    currentSimVelocity = desiredState.speedMetersPerSecond;
-
-    double distancePer20Ms = currentSimVelocity / 50.0;
-
-    currentSimPosition += distancePer20Ms;
+    // Update motor simulations.
+    if (RobotBase.isSimulation()) {
+      turningSim.getAbsoluteEncoderSim().setPosition(desiredState.angle.getRadians());
+      
+      drivingSim.iterate(desiredState.speedMetersPerSecond, 12, .020);
+    }
   }
 
   /** Zeroes all the SwerveModule encoders. */
@@ -269,7 +250,7 @@ public class MAXSwerveModule implements Sendable {
       if (RobotBase.isReal())
           rot = new Rotation2d(turningEncoder.getPosition());
       else
-          rot = new Rotation2d(currentSimAngle - chassisAngularOffset);
+          rot = new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset);
 
       return rot;
   }
@@ -304,10 +285,7 @@ public class MAXSwerveModule implements Sendable {
    */
   public double getVelocity()
   {
-    if (RobotBase.isReal())
-      return drivingEncoder.getVelocity();
-    else
-      return currentSimVelocity;
+    return drivingEncoder.getVelocity();
   }
 
   @Override
@@ -318,10 +296,8 @@ public class MAXSwerveModule implements Sendable {
     builder.addDoubleProperty("1 Cur pos dist", () -> getPosition().distanceMeters, null);
     builder.addDoubleProperty("2 Cur pos angle", () -> getPosition().angle.getDegrees(), null);
     builder.addStringProperty("3 Pose", () -> getPose().toString(), null);
-    builder.addDoubleProperty("4 Velocity SP", () -> currentSimVelocity, null);
-    builder.addDoubleProperty("5 Steer angle SP", () -> Math.toDegrees(currentSimAngle), null);
-    builder.addDoubleProperty("6 Actual velocity", () -> getVelocity(), null);
-    builder.addDoubleProperty("7 Actual steer sngle", () -> getAngle2d().getDegrees(), null);
-    builder.addDoubleProperty("8 Drive PID reference", () -> lastDrivePIDReference, null);
+    builder.addDoubleProperty("4 Velocity", () -> getVelocity(), null);
+    builder.addDoubleProperty("5 Steer sngle", () -> getAngle2d().getDegrees(), null);
+    builder.addDoubleProperty("6 Drive PID reference", () -> lastDrivePIDReference, null);
 	}   
 }
