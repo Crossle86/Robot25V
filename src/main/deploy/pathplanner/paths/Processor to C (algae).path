@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.99718309859155,
-        "y": 0.5102112676056322
+        "x": 6.06332628404772,
+        "y": 0.47555789432010104
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.99718309859155,
-        "y": 0.5102112676056318
+        "x": 5.512996153100053,
+        "y": 1.27721578206154
       },
       "isLocked": false,
       "linkedName": "Processor"
     },
     {
       "anchor": {
-        "x": 5.203521126760563,
-        "y": 2.806161971830985
+        "x": 4.9169798254719845,
+        "y": 2.8767806184214773
       },
       "prevControl": {
-        "x": 4.203521126760563,
-        "y": 2.806161971830985
+        "x": 5.861396366297833,
+        "y": 1.2933313909613064
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,20 +34,20 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 2.0,
-    "maxAcceleration": 1.5,
+    "maxAcceleration": 4.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 0.0,
     "rotation": 29.999999999999996
   },
   "reversed": false,
-  "folder": "Processor to reef",
+  "folder": "Processor to reef (good)",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": true

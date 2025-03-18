@@ -19,7 +19,6 @@ public class OuttakeCoral extends Command {
     public OuttakeCoral(ElevatedManipulator elevatedManipulator){
         // this.coralManipulator = coralManipulator;
         this.elevatedManipulator = elevatedManipulator;
-        addRequirements(elevatedManipulator);
 
         SmartDashboard.putString("Outtake Coral Status", state.name());
     }
@@ -40,10 +39,10 @@ public class OuttakeCoral extends Command {
             else
                 elevatedManipulator.coralManipulator.startOuttaking();
                 
-                if(Util.getElaspedTime(startTime) > 5.0)
+                if(Util.getElaspedTime(startTime) > 0.35)
                     state = State.STOP;
                 SmartDashboard.putString("Outtake Coral Status", state.name());
-                SmartDashboard.putString("Outtake Coral Status: ", state.name());
+                Util.consoleLog("Outtake Coral Status: " + state.name());
                 break;
                 
             case STOP:

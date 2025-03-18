@@ -263,9 +263,10 @@ public class Robot extends TimedRobot
     SmartDashboard.putBoolean("Teleop Mode", true);
 
     robotContainer.resetFaults();
-    robotContainer.fixPathPlannerGyro();
+    robotContainer.fixPathPlannerGyro(); // Because of this only use blue alliance during practice
 
     RobotContainer.algaeManipulator.intialize();
+    RobotContainer.algaeGroundIntake.intialize();
     RobotContainer.coralManipulator.intialize();
     RobotContainer.driveBase.setFieldRelative(true);
 

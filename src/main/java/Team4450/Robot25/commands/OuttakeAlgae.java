@@ -14,19 +14,20 @@ public class OuttakeAlgae extends Command {
 
     public OuttakeAlgae(ElevatedManipulator elevatedManipulator){
        this.elevatedManipulator = elevatedManipulator;
-        addRequirements(elevatedManipulator);
-        SmartDashboard.putString("Algae Manipulator Status", state.name());
+
+       SmartDashboard.putString("Algae Manipulator Status", state.name());
     }
     public void initialize(){
         state = State.OUTTAKE;
         SmartDashboard.putString("Algae Manipulator Status", state.name());
+        Util.consoleLog("Outtake Algae Initialized");
         startTime = Util.timeStamp();
     }
     public void execute(){
         switch(state){
             case OUTTAKE:
                 elevatedManipulator.algaeManipulator.startOuttaking();
-                if(Util.timeStamp() - startTime > 2.0)
+                if(Util.timeStamp() - startTime > 0.5)
                     state = State.STOP;
                 break;
             // case RETURN:

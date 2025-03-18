@@ -30,7 +30,7 @@ public class AlgaeManipulator extends SubsystemBase {
     public double algaeCurrent;
 
     public AlgaeManipulator(){
-        algaeConfig.idleMode(IdleMode.kBrake);
+        //algaeConfig.idleMode(IdleMode.kBrake);
 
         algaeMotor.configure(algaeConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
@@ -55,6 +55,14 @@ public class AlgaeManipulator extends SubsystemBase {
         updateDS();
     }
 
+    // public void periodic(){
+    //  Util.consoleLog("Algae Motor Current:" + algaeMotor.getOutputCurrent());
+    //  Util.consoleLog("Algae Motor Voltage:"+ algaeMotor.getBusVoltage());
+    // //  Util.consoleLog("Algae Motor Applied Output:"+ algaeMotor.getAppliedOutput());
+    // //  Util.consoleLog("Algae Motor Temperature in Celsius:"+ algaeMotor.getMotorTemperature());
+    //  Util.consoleLog("Algae Motor Velocity:"+ algaeMotor.getEncoder().getVelocity());
+    // }
+    
     public void start(double speedfactor){
         isAlgaeMotorRunning = Math.abs(speedfactor) > 0.02;
         
@@ -86,6 +94,12 @@ public class AlgaeManipulator extends SubsystemBase {
         updateDS();
     }
 
+    public void processAlgae(){
+        isAlgaeMotorRunning = true;
+        algaeMotor.set(0.05);
+        updateDS();
+    }
+
     public void start(){
        start(0.1);
        isAlgaeMotorRunning = true;
@@ -94,8 +108,15 @@ public class AlgaeManipulator extends SubsystemBase {
 
     public void stop(){
         Util.consoleLog();
-
+        // if(hasAlgae() == true) {
+        //     holdAlgae();
+        // isAlgaeMotorRunning = true;
+        // }
+        // else if(hasAlgae() == false){
         algaeMotor.stopMotor();
+        // isAlgaeMotorRunning = false;
+        // }
+
         pivotDown();
 
         isAlgaeMotorRunning = false;
@@ -185,5 +206,6 @@ public class AlgaeManipulator extends SubsystemBase {
         SmartDashboard.putBoolean("Algae Manipulator Running", isAlgaeMotorRunning);
         SmartDashboard.putBoolean("Algae Pivot On", algaePivotStatus);
         SmartDashboard.putBoolean("Algae Extended Out", algaeExtendStatus);
+        SmartDashboard.putNumber("Algae Manipulator Velocity:", algaeMotor.getEncoder().getVelocity());
    }
 }
