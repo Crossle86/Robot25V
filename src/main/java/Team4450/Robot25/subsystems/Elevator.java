@@ -16,28 +16,31 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 //Elevator Subsystem that shouldn't be used on it's own, but rather as a part of the ElevatedManipulator Subsystem
 public class Elevator extends SubsystemBase {
-    private SparkFlex motorMain = new SparkFlex(ELEVATOR_LEFT, MotorType.kBrushless);
-    private SparkFlex motorFollower = new SparkFlex(ELEVATOR_RIGHT, MotorType.kBrushless);
+    private SparkFlex motorFollower = new SparkFlex(ELEVATOR_LEFT, MotorType.kBrushless);
+    private SparkFlex motorMain = new SparkFlex(ELEVATOR_RIGHT, MotorType.kBrushless);
     private SparkFlexConfig mainConfig = new SparkFlexConfig();
     private SparkFlexConfig followerConfig = new SparkFlexConfig();
 
     //We use a ProfiledPIDController for acceleration and deceleration control
     private ProfiledPIDController mainPID;
+    // private ProfiledPIDController slowPID;
 
     private RelativeEncoder mainEncoder;
     private RelativeEncoder followerEncoder;
 
-    private final double TOLERANCE_ROTATIONS = 1.5;
+    private final double TOLERANCE_ROTATIONS = 1.0;
     private final double START_ROTATIONS = 0.00 / ELEVATOR_WINCH_FACTOR; //NEEDS TO BE CHANGED TO ACTUAL VALUE
 
     private double targetPosition = Double.NaN; //in units of Rotations
     private boolean isManualControl = false;
     private boolean isSlow = false;
+    public boolean limiter = false;
 
     private DriveBase driveBase;
 
@@ -59,10 +62,16 @@ public class Elevator extends SubsystemBase {
 
         resetEncoders();
 
-        // PID constants, but also the motion profiling constraints
         mainPID = new ProfiledPIDController(0.12, 0, 0, new Constraints(
-            (3.25 / -ELEVATOR_WINCH_FACTOR), 8 / -ELEVATOR_WINCH_FACTOR // velocity / acceleration
-        ));
+                (3.25 / -ELEVATOR_WINCH_FACTOR), 6 / -ELEVATOR_WINCH_FACTOR // velocity / acceleration
+            ));
+
+        // slowPID = new ProfiledPIDController(0.12, 0, 0, new Constraints(
+        //         (2.5 / -ELEVATOR_WINCH_FACTOR), 8 / -ELEVATOR_WINCH_FACTOR // velocity / acceleration
+        //     ));
+
+        // PID constants, but also the motion profiling constraints
+    
         // mainPID = new ProfiledPIDController(0.12, 0, 0, new Constraints(
         //     (1.625 / -ELEVATOR_WINCH_FACTOR), 8 / -ELEVATOR_WINCH_FACTOR // velocity / acceleration
         // ));
@@ -85,10 +94,7 @@ public class Elevator extends SubsystemBase {
         if (targetPosition > 0) 
             targetPosition = 0; 
 
-        //Main PID/Profile Loop which is used to control the elevator, and uses targetPosition 
-        //which has units of rotations.  
-        mainPID.setGoal(targetPosition);
-        double nonclamped = mainPID.calculate(mainEncoder.getPosition());
+        
         
         // Calculate the distance to the target
         double distanceToTarget = Math.abs(targetPosition - mainEncoder.getPosition());
@@ -97,6 +103,21 @@ public class Elevator extends SubsystemBase {
         // Adjust motor output based on distance to target
         double motorOutput;
         
+        //Main PID/Profile Loop which is used to control the elevator, and uses targetPosition 
+        //which has units of rotations. 
+        // double nonclamped = 0.0; // Initialize nonclamped with a default value
+
+
+        // if (targetPosition > this.getElevatorPosition()) {
+        //     mainPID.setGoal(targetPosition);
+        //     nonclamped = mainPID.calculate(mainEncoder.getPosition());
+        // } else if (targetPosition < this.getElevatorPosition()) {
+        //     slowPID.setGoal(targetPosition);
+        //     nonclamped = slowPID.calculate(mainEncoder.getPosition());
+        // }
+        mainPID.setGoal(targetPosition);
+        double nonclamped = mainPID.calculate(mainEncoder.getPosition());
+
         if(isSlow == true){
             motorOutput = Util.clampValue(nonclamped, 0.30);
         }
@@ -115,6 +136,35 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Elevator Speed", motorOutput);
         motorMain.set(motorOutput);
         SmartDashboard.putNumber("Elevator Amperage", motorMain.getOutputCurrent());
+
+        
+        // if (!driveBase.slowModeEnabled && this.getElevatorHeight() == 0.99) {
+        //     driveBase.speedLimiter = 0.45;
+        //     driveBase.rotSpeedLimiter = 0.65;
+        //     Util.consoleLog("%.2f %.2f", driveBase.speedLimiter, driveBase.rotSpeedLimiter);
+        // }
+
+        // height 0.59 L2 1 drive speed and rotation speed
+        // height 0.99 L3 0.48 drive speed and 0.68 rotation speed
+        // height 1.59 L4 0.2 drive speed and 0.4 rotation speed
+        if(limiter == true){
+            if (!driveBase.slowModeEnabled) {
+            driveBase.speedLimiter = Math.pow(2, -(3.1 * this.getElevatorHeight() - 0.65));
+            driveBase.rotSpeedLimiter = Math.pow(2, -(3.1 * this.getElevatorHeight() - 0.65)) + 0.2;
+            if (driveBase.speedLimiter > 1) {
+                driveBase.speedLimiter = 1;
+            }
+            if (driveBase.rotSpeedLimiter > 1) {
+                driveBase.rotSpeedLimiter = 1;
+            }
+            if (driveBase.speedLimiter < 0.2) {
+                driveBase.speedLimiter = 0.2;
+            }
+            if (driveBase.rotSpeedLimiter < 0.4) {
+                driveBase.rotSpeedLimiter = 0.4;
+            }
+        }
+    }
     }
 
     /**
@@ -125,6 +175,11 @@ public class Elevator extends SubsystemBase {
         targetPosition = Double.NaN;
     }
     
+    public double getElevatorPosition(){
+        double position = mainEncoder.getPosition();
+        SmartDashboard.putNumber("Elevator Position", position);
+        return position;
+    }
 
     /**
      * Increase/Decrease the target position by a certain amount
@@ -136,9 +191,9 @@ public class Elevator extends SubsystemBase {
         targetPosition -= change;
     }
 
-    public void moveSlow(double change){
+    public void moveSlowToHeight(double height){
         isSlow = true;
-        targetPosition -= change;
+        targetPosition = height/ELEVATOR_WINCH_FACTOR;
     }
     /**
      * Bypass all setpoint generation and just run direct motor power. This
@@ -185,4 +240,3 @@ public class Elevator extends SubsystemBase {
     }
 
 }
-

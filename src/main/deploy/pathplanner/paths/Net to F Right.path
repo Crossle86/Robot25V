@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.074107732954301,
-        "y": 6.1334684544670335
+        "x": 3.389442567567568,
+        "y": 5.833361486486485
       },
       "isLocked": false,
       "linkedName": null
@@ -20,15 +20,20 @@
         "y": 5.258010563380281
       },
       "prevControl": {
-        "x": 5.288233052959667,
-        "y": 5.94094260823231
+        "x": 3.3202702702702704,
+        "y": 6.030996621621621
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "F Algae"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7909270216962672,
+      "rotationDegrees": -151.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

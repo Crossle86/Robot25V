@@ -110,8 +110,8 @@ public class DriveBase extends SubsystemBase {
   private double currentTranslationMag = 0.0;
 
   // multiplied by X,Y translation and rotation outputs for "slow mode".
-  private double speedLimiter = 1;
-  private double rotSpeedLimiter = 1;
+  public double speedLimiter = 1;
+  public double rotSpeedLimiter = 1;
   
   // we limit magnitude changes in the positive direction (acceleration), but allow crazy high rates in negative direction
   // (deceleration). this has effect that deceleration is instant but acceleration is limited
@@ -122,7 +122,7 @@ public class DriveBase extends SubsystemBase {
   private double prevTime = WPIUtilJNI.now() * 1e-6;
 
 
-  private boolean slowModeEnabled = false;
+  public boolean slowModeEnabled = false;
 
   // Odometry class for tracking robot pose
   // SwerveDriveOdometry odometry = new SwerveDriveOdometry(
@@ -258,6 +258,7 @@ public class DriveBase extends SubsystemBase {
     setField2dModulePoses();
 
     AdvantageScope.getInstance().setSwerveModules(frontLeft, frontRight, rearLeft, rearRight);
+
   }
 
   /**
@@ -295,6 +296,14 @@ public class DriveBase extends SubsystemBase {
    */
   public Pose2d getPose() {
     return odometry.getEstimatedPosition();
+  }
+
+  public Rotation2d getRotation2d() {
+    return getPose().getRotation();
+  }
+
+  public double getAngle(){
+    return this.getRotation2d().getDegrees();
   }
 
   /**
@@ -352,13 +361,12 @@ public class DriveBase extends SubsystemBase {
    * resets it by subtracting 180 from current gyro value.
    */
   public void fixPathPlannerGyro() {
-    Util.consoleLog("alliance %s", alliance);
-  if (alliance == Alliance.Red) {
-    startingGyroRotation -= 180;
-    // we don't just set it to 0 because it might nit have started/ended in downfield state
-    ppGyroReversed = false; // set the flag so if re-eneabled twice in teleop it doesn't cycle back and forth
+    if (ppGyroReversed) {
+      startingGyroRotation -= 180;
+      // we don't just set it to 0 because it might nit have started/ended in downfield state
+      ppGyroReversed = false; // set the flag so if re-eneabled twice in teleop it doesn't cycle back and forth
+    }
   }
-}
 
   /**
    * Method to drive the robot using joystick info.
@@ -509,6 +517,22 @@ public class DriveBase extends SubsystemBase {
 
     // restore previous state of field-relative.
     fieldRelative = previousState;
+
+    updateDS();
+  }
+
+  public void driveFieldRelative(double xSpeed, double ySpeed, double rotSpeed) {
+    //// store the current state of field-relative toggle to restore later
+    //boolean previousState = fieldRelative;
+    fieldRelative = true;
+
+    updateDS();
+
+    // drive using the robot relative speeds/joystick values
+    drive(xSpeed, ySpeed, rotSpeed, false);
+
+    //// restore previous state of field-relative.
+    //fieldRelative = previousState;
 
     updateDS();
   }
@@ -823,6 +847,7 @@ public class DriveBase extends SubsystemBase {
    */
   public void enableSlowMode()
   {
+    slowModeEnabled = true;
     speedLimiter = DriveConstants.kSlowModeFactor;
     rotSpeedLimiter = DriveConstants.kRotSlowModeFactor;
 
@@ -836,6 +861,7 @@ public class DriveBase extends SubsystemBase {
    */
   public void disableSlowMode()
   {
+    slowModeEnabled = false;
     Util.consoleLog();
 
     speedLimiter = 1;
@@ -845,6 +871,8 @@ public class DriveBase extends SubsystemBase {
   }
   public void enableTrackingSlowMode(){
 
+    slowModeEnabled = true;
+    magLimiter = new SlewRateLimiter((DriveConstants.kMagnitudeSlewRate)/10, Double.NEGATIVE_INFINITY, 0);
     speedLimiter = DriveConstants.kTrackingModeFactor;
     rotSpeedLimiter = DriveConstants.kRotTrackingModeFactor;
   
@@ -854,7 +882,11 @@ public class DriveBase extends SubsystemBase {
   }
   
   public void disableTrackingSlowMode(){
-  
+    
+    slowModeEnabled = false;
+
+    magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate, Double.NEGATIVE_INFINITY, 0);
+
     Util.consoleLog();
   
     speedLimiter = 1;
@@ -916,6 +948,45 @@ public class DriveBase extends SubsystemBase {
   private double goalPitch;
   private double goalYaw;
 
+  private Pose2d targetPose = new Pose2d(0,0, new Rotation2d(0));
+  private int targetID = 0;
+  private boolean rotatedToTargetPose = false;
+
+  public void setTargetPose(Pose2d targetPose) {
+    this.targetPose = targetPose;
+    this.rotatedToTargetPose = false;
+    Util.consoleLog("target pose:" + targetPose.toString());
+  }
+
+  public Pose2d getTargetPose() {
+    if (this.targetPose == null) {
+      return new Pose2d(0, 0, new Rotation2d(0));
+    } 
+    else {
+      return this.targetPose;
+    }
+  }
+
+  public void setTargetID(int targetID){
+    this.targetID = targetID;
+  }
+
+  public int getTargetID(){
+    if(this.targetID == 0){
+      return 0;
+    }
+    else {
+      return this.targetID;
+    }
+  }
+
+  public void setRotatedToTargetPose(boolean isRotatedToTargetPose) {
+    this.rotatedToTargetPose = true;
+}
+
+  public boolean getRotatedToTargetPose() {
+    return this.rotatedToTargetPose;
+  }
   public void setTargetPitch(double targetPitch){
     goalPitch = targetPitch;
   }

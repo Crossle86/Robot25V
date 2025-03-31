@@ -26,14 +26,14 @@ public class ElevatedManipulator extends SubsystemBase {
         /* Algae Processor Scoring Position */ ALGAE_PROCESSOR_SCORING,
         /*Algae Ground Intake Position */ ALGAE_GROUND_INTAKE,
         /*Climb Position */ CLIMB,
-        /*Coral Ground Intake Position */ CORAL_GROUND_INTAKE,
-        /*Coral Ground Feed Position */ CORAL_GROUND_FEED,
         /* No Position */ NONE,
     };
 
     public boolean scoreCoralInsteadOfAlgae = true;
     
     public boolean intakeCoralInsteadOfAlgae = true;
+
+    public boolean outtakeProcessor = false;
 
     private double endGoalElevatorHeight;
 
@@ -45,16 +45,13 @@ public class ElevatedManipulator extends SubsystemBase {
 
     private boolean endGoalAlgaeGroundPistonStatus;
 
-    private double endGoalCoralGroundPivotAngle;
-
-    private double intakeCoralGroundPivotAngle = -90;
+    private boolean isAtSafeAlgaeHeight;
 
     private boolean atTarget;
 
     private PresetPosition position = PresetPosition.NONE;
 
     public ElevatedManipulator(CoralManipulator coralManipulator, 
-                            //    CoralGroundIntake coralGroundIntake,
                                AlgaeManipulator algaeManipulator, 
                                AlgaeGroundIntake algaeGroundIntake,
                                Elevator elevator){
@@ -76,7 +73,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case RESET:
                 endGoalElevatorHeight = 0.05;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -87,8 +83,8 @@ public class ElevatedManipulator extends SubsystemBase {
 
             case CORAL_STATION_INTAKE:
                 endGoalElevatorHeight = 0.3655;
+                // endGoalElevatorHeight = 0.389;
                 endGoalCoralPivotStatus = true;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -100,7 +96,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case CORAL_SCORING_L1:
                 endGoalElevatorHeight = 0.44;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -110,7 +105,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case CORAL_SCORING_L1_NEW:
                 endGoalElevatorHeight = 0.05;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -122,7 +116,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case CORAL_SCORING_L2:
                 endGoalElevatorHeight = 0.59;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -134,7 +127,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case CORAL_SCORING_L3:
                 endGoalElevatorHeight = 0.98;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -146,7 +138,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case CORAL_SCORING_L4:
                 endGoalElevatorHeight = 1.590;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 if(algaeManipulator.hasAlgae())
                     endGoalAlgaeExtendStatus = true;
                 else
@@ -158,7 +149,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case ALGAE_REMOVE_L2:
                 endGoalElevatorHeight = 0.37;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 endGoalAlgaeExtendStatus = true;
                 endGoalAlgaePivotStatus = false;
                 endGoalAlgaeGroundPistonStatus = false;
@@ -167,7 +157,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case ALGAE_REMOVE_L3:
                 endGoalElevatorHeight = 0.80;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 endGoalAlgaeExtendStatus = true;
                 endGoalAlgaePivotStatus = false;
                 endGoalAlgaeGroundPistonStatus = false;
@@ -176,7 +165,6 @@ public class ElevatedManipulator extends SubsystemBase {
             case ALGAE_NET_SCORING:
                 endGoalElevatorHeight = 1.72;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 endGoalAlgaeExtendStatus = true;
                 if(hasAlgae() == true)
                     endGoalAlgaePivotStatus = true;
@@ -188,43 +176,24 @@ public class ElevatedManipulator extends SubsystemBase {
             case ALGAE_PROCESSOR_SCORING:
                 endGoalElevatorHeight = 0.05;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 endGoalAlgaeExtendStatus = true;
                 endGoalAlgaePivotStatus = false;
                 endGoalAlgaeGroundPistonStatus = false;
                 break;
 
             case ALGAE_GROUND_INTAKE:
-                endGoalElevatorHeight = 0;
+                endGoalElevatorHeight = 0.05;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 endGoalAlgaeExtendStatus = true;
                 endGoalAlgaePivotStatus = false;
                 endGoalAlgaeGroundPistonStatus = true;
                 break;
 
+
             case CLIMB:
                 endGoalElevatorHeight = 0;
                 endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
                 endGoalAlgaeExtendStatus = true;
-                endGoalAlgaePivotStatus = false;
-                endGoalAlgaeGroundPistonStatus = false;
-                break;
-
-            case CORAL_GROUND_INTAKE:
-                endGoalElevatorHeight = 0.05;
-                endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 0;
-                endGoalAlgaeExtendStatus = false;
-                endGoalAlgaePivotStatus = false;
-                endGoalAlgaeGroundPistonStatus = false;
-                break;
-            case CORAL_GROUND_FEED:
-                endGoalElevatorHeight = 0.05;
-                endGoalCoralPivotStatus = false;
-                endGoalCoralGroundPivotAngle = 90;
-                endGoalAlgaeExtendStatus = false;
                 endGoalAlgaePivotStatus = false;
                 endGoalAlgaeGroundPistonStatus = false;
                 break;
@@ -239,7 +208,6 @@ public class ElevatedManipulator extends SubsystemBase {
     public boolean executeSetPosition(double elevatorPosition, boolean coralPivotStatus, double coralGroundIntakePosition, boolean algaeExtendStatus, boolean algaePivotStatus, boolean algaeGroundPistonStatus){
         this.position = PresetPosition.NONE;
         this.endGoalCoralPivotStatus = coralPivotStatus;
-        this.endGoalCoralGroundPivotAngle = coralGroundIntakePosition;
         this.endGoalAlgaeExtendStatus = algaeExtendStatus;
         this.endGoalAlgaePivotStatus = algaePivotStatus;
         this.endGoalElevatorHeight = elevatorPosition;
@@ -358,6 +326,12 @@ public class ElevatedManipulator extends SubsystemBase {
     }
     public boolean isElevatorAtTarget(double height){
         return elevator.isElevatorAtTarget(height);
+    }
+
+    public boolean isAtSafeAlgaeHeight(){
+        if(elevator.getElevatorHeight() > 0.30)
+            return isAtSafeAlgaeHeight == true;
+        return false;
     }
 
     // public boolean isPivotAtTarget(double goal){
