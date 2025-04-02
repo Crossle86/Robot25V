@@ -28,6 +28,7 @@ public class DriveToAlgaeTag extends Command {
     PhotonVision photonVision;
     private boolean alsoDrive;
     private boolean initialFieldRel;
+    private int nullTagCounter;
     /**
      * @param robotDrive the drive subsystem
      */
@@ -35,8 +36,6 @@ public class DriveToAlgaeTag extends Command {
         this.robotDrive = robotDrive;
         this.photonVision = photonVision;
         this.alsoDrive = alsoDrive;
-
-        if (alsoDrive) addRequirements(robotDrive);
 
         SendableRegistry.addLW(translationController, "DriveToAlgaeTag Translation PID");
         SendableRegistry.addLW(rotationController, "DriveToAlgaeTag Rotation PID");
@@ -60,33 +59,33 @@ public class DriveToAlgaeTag extends Command {
         translationController.setTolerance(0.5);
 
         SmartDashboard.putString("DriveToAlgaeTag", "Tag Tracking Initialized");
+        // SmartDashboard.putData("Algae Translation", translationController);
     }
 
     @Override
     public void execute() {
+        // if (nullTagCounter > 5) {
+        //     robotDrive.drive(0, 0, 0, false);
+        // }
       // logic for chosing "closest" target in PV subsystem
       Optional<PhotonPipelineResult> pipeline = photonVision.getLatestResult();
       //PhotonTrackedTarget target = photonVision.getLatestResult();
       if (pipeline.isEmpty() || pipeline == null) {
-        robotDrive.drive(0, 0, 0, false);
+        nullTagCounter += 1;
         return;
       }
 
       if(pipeline.get().getTargets().size() == 0){
-        robotDrive.drive(0, 0, 0, false);
+        nullTagCounter += 1;
         return;
       }
 
       PhotonTrackedTarget target = pipeline.get().getTargets().get(0);
 
       if (target == null) {
-          Util.consoleLog("What why");
-      }
-
-      if (target == null) {
         robotDrive.setTrackingRotation(Double.NaN); // temporarily disable tracking
         robotDrive.clearPPRotationOverride();
-        robotDrive.drive(0, 0, 0, false);
+        nullTagCounter += 1;
         return;
       }
 
@@ -96,12 +95,18 @@ public class DriveToAlgaeTag extends Command {
         double rotation = rotationController.calculate(targetYaw); // attempt to minimize
         double movement = translationController.calculate(targetPitch); // attempt to minimize
 
+        if(targetYaw < 11.2){
+            rotation = 0;
+        }
+        else if(targetYaw > 12.2){
+            rotation = 0;
+        }
 
         Util.consoleLog("in[yaw=%f, pitch=%f] out[rot=%f, mov=%f]", target.getYaw(), target.getPitch(), rotation, movement);
 
         if (alsoDrive) {
             robotDrive.driveRobotRelative(0, -movement, rotation);
-
+            nullTagCounter = 0;
         } else {
             robotDrive.setTrackingRotation(rotation);
         }
@@ -111,7 +116,7 @@ public class DriveToAlgaeTag extends Command {
     public void end(boolean interrupted) {
         Util.consoleLog("interrupted=%b", interrupted);
         
-        if (alsoDrive) robotDrive.drive(0, 0, 0, false);
+        // if (alsoDrive) robotDrive.drive(0, 0, 0, false);
         
         if (initialFieldRel) robotDrive.toggleFieldRelative(); // restore beginning state
         
