@@ -218,6 +218,9 @@ public class MAXSwerveModule implements Sendable {
     // Optimize the reference state to avoid spinning further than 90 degrees.
     desiredState.optimize(new Rotation2d(turningEncoder.getPosition()));
 
+    //rich
+    desiredState.cosineScale(new Rotation2d(turningEncoder.getPosition()));
+
     // Command driving and turning SPARK controllers towards their respective setpoints.
     drivingPIDController.setReference(desiredState.speedMetersPerSecond, SparkMax.ControlType.kVelocity);
     lastDrivePIDReference = desiredState.speedMetersPerSecond;
