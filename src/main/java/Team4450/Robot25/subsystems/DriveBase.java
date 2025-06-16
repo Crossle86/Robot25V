@@ -6,6 +6,7 @@
 package Team4450.Robot25.subsystems;
 
 import static Team4450.Robot25.Constants.alliance;
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_MS;
 
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ import Team4450.Robot25.utility.SwerveUtils;
 import Team4450.Robot25.AdvantageScope;
 import Team4450.Robot25.Constants;
 import Team4450.Robot25.RobotContainer;
+import Team4450.Robot25.commands.Utility.NotifierCommand;
 import Team4450.Lib.Util;
 import Team4450.Lib.FXEncoder;
 import Team4450.Lib.Talon_FX;
@@ -53,6 +55,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.Notifier;
 
 public class DriveBase extends SubsystemBase {
   // Create MAXSwerveModules
@@ -155,6 +158,8 @@ public class DriveBase extends SubsystemBase {
 
   //public FXEncoder fxEncoder = new FXEncoder(talon_FX, 1.0);
 
+  public static NotifierCommand   updateOdometyCommand;
+
   public DriveBase() {
     Util.consoleLog("max vel=%.2f m/s", DriveConstants.kMaxSpeedMetersPerSecond);
 
@@ -196,16 +201,32 @@ public class DriveBase extends SubsystemBase {
 
     configureAutoBuilder();
 
+    // We use a NotifierCommand to run odometry update method in a separate thread
+    // from the main thread. We set that command as the default command for this
+    // subsystem so the scheduler starts the command. After start, the notifier
+    // runs all the time updating the odometry on a faster period than the main
+    // robot code. Supposed to increase accuracy of robot position.
+    //NotifierCommand updateOdometyCommand = new NotifierCommand(this::updateOdometry, 
+    //                                                           ROBOT_PERIOD_MS / 2, "UO", this);
+
+    //updateOdometyCommand.schedule();
+    //this.setDefaultCommand(updateCommand);
+
+    new Thread(() -> {
+      try {
+        do {
+          updateOdometry();
+          Thread.sleep(ROBOT_PERIOD_MS / 2);    
+        } while (true);
+      } catch (Exception e) { }
+    }).start();
+
     updateDS();
   }
 
-  // Called on every Scheduler loop.
-
-  @Override
-  public void periodic() {
-    // Update the odometry (robot position on field).
-    // combined with poseesitmator this merges with vision
-    Pose2d currentPose = odometry.update(
+  private void updateOdometry()
+  {
+    odometry.update(
         Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
         new SwerveModulePosition[] {
             frontLeft.getPosition(),
@@ -213,6 +234,23 @@ public class DriveBase extends SubsystemBase {
             rearLeft.getPosition(),
             rearRight.getPosition()
         });
+  }
+
+  // Called on every Scheduler loop.
+
+  @Override
+  public void periodic() {
+    // Update the odometry (robot position on field).
+    // Update the pose (robot position on field). rich
+    Pose2d currentPose = getPose();
+    // Pose2d currentPose = odometry.update(
+    //     Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
+    //     new SwerveModulePosition[] {
+    //         frontLeft.getPosition(),
+    //         frontRight.getPosition(),
+    //         rearLeft.getPosition(),
+    //         rearRight.getPosition()
+    //     });
 
     // update 3d simulation: look in AdvantageScope.java for more
     AdvantageScope.getInstance().setRobotPose(currentPose);

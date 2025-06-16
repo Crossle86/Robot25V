@@ -30,6 +30,10 @@ import Team4450.Lib.Util;
 
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
+
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_MS;
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_SEC;
+
 import com.revrobotics.AbsoluteEncoder;
 import Team4450.Robot25.Constants.ModuleConstants;
 
@@ -141,6 +145,27 @@ public class MAXSwerveModule implements Sendable {
     drivingConfig.smartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit);
     
     turningConfig.smartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit);
+      
+    drivingConfig //rich
+    .signals
+    .absoluteEncoderPositionAlwaysOn(true)
+    .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
+    .absoluteEncoderVelocityAlwaysOn(true)
+    .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
+    .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
+    .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
+    .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
+
+  
+    turningConfig //rich
+    .signals
+    .absoluteEncoderPositionAlwaysOn(true)
+    .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
+    .absoluteEncoderVelocityAlwaysOn(true)
+    .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
+    .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
+    .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
+    .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
 
     // Save the SPARK configurations. If a SPARK browns out during
     // operation, it will maintain the above configurations.
@@ -210,7 +235,7 @@ public class MAXSwerveModule implements Sendable {
     if (RobotBase.isSimulation()) {
       turningSim.getAbsoluteEncoderSim().setPosition(desiredState.angle.getRadians());
       
-      drivingSim.iterate(desiredState.speedMetersPerSecond, 12, .020);
+      drivingSim.iterate(desiredState.speedMetersPerSecond, 12, ROBOT_PERIOD_SEC); //rich
     }
   }
 

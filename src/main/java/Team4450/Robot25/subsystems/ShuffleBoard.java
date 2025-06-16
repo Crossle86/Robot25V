@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
@@ -38,7 +39,7 @@ public class ShuffleBoard extends SubsystemBase
         // subsystem so the scheduler starts the command. After start, the notifier
         // runs all the time updating the DS every 25ms which is slightly slower than
         // the main thread update period.
-        updateCommand = new NotifierCommand(this::updateDS, .025, "SB", this);
+        updateCommand = new NotifierCommand(this::updateDS, ROBOT_PERIOD_SEC + .005, "SB", this); //rich
 
         this.setDefaultCommand(updateCommand);
 

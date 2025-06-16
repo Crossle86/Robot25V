@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "RAC25VS-02.25.25";
+	public static String		PROGRAM_NAME = "RAC25VS-05.23.25";
 
 	public static Robot			robot;
 
@@ -37,8 +37,10 @@ public final class Constants
 	public static DriverStation.Alliance	 alliance;
 	public static int                        location, matchNumber;
 	public static String					 eventName, gameMessage;
-	    
-    public static String                     functionMarker = "-".repeat(30);
+    public static String                     functionMarker = "-".repeat(30); //rich
+
+    public static final double  ROBOT_PERIOD_SEC = .02;  //rich
+    public static final int     ROBOT_PERIOD_MS = 20;
 
 	// Non-drive base motor controller port assignments
     public static final int     CORAL_MANIPULATOR = 9;
