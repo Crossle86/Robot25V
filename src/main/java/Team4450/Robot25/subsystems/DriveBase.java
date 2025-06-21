@@ -6,7 +6,10 @@
 package Team4450.Robot25.subsystems;
 
 import static Team4450.Robot25.Constants.alliance;
+import static Team4450.Robot25.Constants.ODOMETRY_PERIOD_MS;
+import static Team4450.Robot25.Constants.ODOMETRY_PERIOD_SEC;
 import static Team4450.Robot25.Constants.ROBOT_PERIOD_MS;
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_SEC;
 
 import java.util.Optional;
 
@@ -158,7 +161,7 @@ public class DriveBase extends SubsystemBase {
 
   //public FXEncoder fxEncoder = new FXEncoder(talon_FX, 1.0);
 
-  public static NotifierCommand   updateOdometyCommand;
+  public NotifierCommand   updateOdometyCommand;
 
   public DriveBase() {
     Util.consoleLog("max vel=%.2f m/s", DriveConstants.kMaxSpeedMetersPerSecond);
@@ -206,20 +209,17 @@ public class DriveBase extends SubsystemBase {
     // subsystem so the scheduler starts the command. After start, the notifier
     // runs all the time updating the odometry on a faster period than the main
     // robot code. Supposed to increase accuracy of robot position.
-    //NotifierCommand updateOdometyCommand = new NotifierCommand(this::updateOdometry, 
-    //                                                           ROBOT_PERIOD_MS / 2, "UO", this);
+    updateOdometyCommand = new NotifierCommand(this::updateOdometry, ODOMETRY_PERIOD_SEC, "UO");
 
-    //updateOdometyCommand.schedule();
-    //this.setDefaultCommand(updateCommand);
-
-    new Thread(() -> {
-      try {
-        do {
-          updateOdometry();
-          Thread.sleep(ROBOT_PERIOD_MS / 2);    
-        } while (true);
-      } catch (Exception e) { }
-    }).start();
+    
+    // new Thread(() -> {
+    //   try {
+    //     do {
+    //       updateOdometry();
+    //       Thread.sleep(ODOMETRY_PERIOD_MS);    
+    //     } while (true);
+    //   } catch (Exception e) { Util.logException(e); }
+    // }).start();
 
     updateDS();
   }
@@ -240,8 +240,9 @@ public class DriveBase extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Update the odometry (robot position on field).
-    // Update the pose (robot position on field). rich
+    // Update the odometry (robot position on field)
+    // giving the pose (robot position on field and direction facing). rich
+    //updateOdometry();
     Pose2d currentPose = getPose();
     // Pose2d currentPose = odometry.update(
     //     Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
@@ -304,20 +305,21 @@ public class DriveBase extends SubsystemBase {
   @Override
   public void simulationPeriodic()
   {
-    // want to simulate navX gyro changing as robot turns
-    // information available is radians per second and this happens every 20ms
-    // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi
-    // increment is made every 20 ms so radian adder would be (rads/sec) * (20/1000)
-    // degree adder would be radian adder * 360/2pi
-    // so degree increment multiplier is 360/100pi = 1.1459
+    // Want to simulate navX gyro changing as robot turns.
+    // Information available is radians per second and this happens every robot period seconds.
+    // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi.
+    // Increment is made every robot period so radian adder would be (rads/sec) * .02.
+    // Degree adder would be radian adder * 360/2pi or 57.2957795.
+    // So degree increment multiplier for rad/sec is period * 57.2957... = 1.1459155 (for .02 period)
 
-    double temp = chassisSpeeds.omegaRadiansPerSecond * 1.1459155;
+    //double temp = chassisSpeeds.omegaRadiansPerSecond * (ROBOT_PERIOD_SEC * 57.2957795); // rich
+    //double temp = chassisSpeeds.omegaRadiansPerSecond * 1.1459155;
 
-    simAngle += temp;
+    simAngle += chassisSpeeds.omegaRadiansPerSecond * (ROBOT_PERIOD_SEC * 57.2957795); // rich
 
-    RobotContainer.navx.setSimAngle(simAngle);
+    RobotContainer.navx.setSimAngle(simAngle); // This is total angle we have rotated.
 
-    Unmanaged.feedEnable(20);
+    //Unmanaged.feedEnable(20); rich
 
     //talon_FX.simulationPeriodic();
   }

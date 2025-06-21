@@ -41,6 +41,8 @@ public final class Constants
 
     public static final double  ROBOT_PERIOD_SEC = .02;  //rich
     public static final int     ROBOT_PERIOD_MS = 20;
+    public static final double  ODOMETRY_PERIOD_SEC = .01;
+    public static final int     ODOMETRY_PERIOD_MS = 10;
 
 	// Non-drive base motor controller port assignments
     public static final int     CORAL_MANIPULATOR = 9;
