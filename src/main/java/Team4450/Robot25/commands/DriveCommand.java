@@ -82,10 +82,8 @@ public class DriveCommand extends Command
 
         // Have to invert for sim...not sure why.
         if (RobotBase.isSimulation()) rotation *= -1;
-        
-        driveBase.drive(throttle, strafe, rotation, true);
 
-        //driveBase.talon_FX.set(throttle);
+        driveBase.drive(throttle, strafe, rotation, true);
     }
 
     @Override
@@ -100,10 +98,4 @@ public class DriveCommand extends Command
     {
         return Math.abs(value) > deadband ? value : 0.0;
     }
-
-    // commented out because Util.squareInput does this already and it was giving an error
-    // private static double squareTheInput(double value) 
-    // {
-    //     return Math.copySign(value * value, value);
-    // }
 }

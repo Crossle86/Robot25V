@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "RAC25VS-05.23.25";
+	public static String		PROGRAM_NAME = "ORF25-09.14.25";
 
 	public static Robot			robot;
 
@@ -37,12 +37,13 @@ public final class Constants
 	public static DriverStation.Alliance	 alliance;
 	public static int                        location, matchNumber;
 	public static String					 eventName, gameMessage;
-    public static String                     functionMarker = "-".repeat(30); //rich
+    public static String                     functionMarker = "-".repeat(30);
 
-    public static final double  ROBOT_PERIOD_SEC = .02;  //rich
+    public static final double  ROBOT_PERIOD_SEC = .02;
     public static final int     ROBOT_PERIOD_MS = 20;
-    public static final double  ODOMETRY_PERIOD_SEC = .01;
-    public static final int     ODOMETRY_PERIOD_MS = 10;
+
+    // See DriveBase.SimulationPeriodic for an explanation of this constant.
+    public static final double  DEGREE_INCR_MULT_RS = ROBOT_PERIOD_SEC * (360 / (2 * Math.PI));
 
 	// Non-drive base motor controller port assignments
     public static final int     CORAL_MANIPULATOR = 9;

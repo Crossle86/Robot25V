@@ -6,14 +6,9 @@
 package Team4450.Robot25.subsystems;
 
 import static Team4450.Robot25.Constants.alliance;
-import static Team4450.Robot25.Constants.ODOMETRY_PERIOD_MS;
-import static Team4450.Robot25.Constants.ODOMETRY_PERIOD_SEC;
-import static Team4450.Robot25.Constants.ROBOT_PERIOD_MS;
-import static Team4450.Robot25.Constants.ROBOT_PERIOD_SEC;
-
+import static Team4450.Robot25.Constants.DEGREE_INCR_MULT_RS;
 import java.util.Optional;
 
-import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.studica.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -32,13 +27,7 @@ import Team4450.Robot25.Constants;
 import Team4450.Robot25.RobotContainer;
 import Team4450.Robot25.commands.Utility.NotifierCommand;
 import Team4450.Lib.Util;
-import Team4450.Lib.FXEncoder;
-import Team4450.Lib.Talon_FX;
-
-import edu.wpi.first.hal.SimDouble;
-import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -49,16 +38,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.util.WPIUtilJNI;
-import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.Notifier;
 
 public class DriveBase extends SubsystemBase {
   // Create MAXSwerveModules
@@ -204,29 +190,17 @@ public class DriveBase extends SubsystemBase {
 
     configureAutoBuilder();
 
-    // We use a NotifierCommand to run odometry update method in a separate thread
-    // from the main thread. We set that command as the default command for this
-    // subsystem so the scheduler starts the command. After start, the notifier
-    // runs all the time updating the odometry on a faster period than the main
-    // robot code. Supposed to increase accuracy of robot position.
-    updateOdometyCommand = new NotifierCommand(this::updateOdometry, ODOMETRY_PERIOD_SEC, "UO");
-
-    
-    // new Thread(() -> {
-    //   try {
-    //     do {
-    //       updateOdometry();
-    //       Thread.sleep(ODOMETRY_PERIOD_MS);    
-    //     } while (true);
-    //   } catch (Exception e) { Util.logException(e); }
-    // }).start();
-
     updateDS();
   }
 
-  private void updateOdometry()
-  {
-    odometry.update(
+  // Called on every Scheduler loop.
+
+  @Override
+  public void periodic() {
+    // Update the odometry (tracks robot position on field)
+    // giving the pose (robot position on field and direction facing).
+
+    Pose2d currentPose = odometry.update(
         Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
         new SwerveModulePosition[] {
             frontLeft.getPosition(),
@@ -234,24 +208,6 @@ public class DriveBase extends SubsystemBase {
             rearLeft.getPosition(),
             rearRight.getPosition()
         });
-  }
-
-  // Called on every Scheduler loop.
-
-  @Override
-  public void periodic() {
-    // Update the odometry (robot position on field)
-    // giving the pose (robot position on field and direction facing). rich
-    //updateOdometry();
-    Pose2d currentPose = getPose();
-    // Pose2d currentPose = odometry.update(
-    //     Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
-    //     new SwerveModulePosition[] {
-    //         frontLeft.getPosition(),
-    //         frontRight.getPosition(),
-    //         rearLeft.getPosition(),
-    //         rearRight.getPosition()
-    //     });
 
     // update 3d simulation: look in AdvantageScope.java for more
     AdvantageScope.getInstance().setRobotPose(currentPose);
@@ -308,20 +264,17 @@ public class DriveBase extends SubsystemBase {
     // Want to simulate navX gyro changing as robot turns.
     // Information available is radians per second and this happens every robot period seconds.
     // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi.
-    // Increment is made every robot period so radian adder would be (rads/sec) * .02.
+    // Increment is made every robot period so radian adder would be (rads/sec) * period.
     // Degree adder would be radian adder * 360/2pi or 57.2957795.
     // So degree increment multiplier for rad/sec is period * 57.2957... = 1.1459155 (for .02 period)
+    // We then convert the rotational speed into degrees rotated during the period.
 
-    //double temp = chassisSpeeds.omegaRadiansPerSecond * (ROBOT_PERIOD_SEC * 57.2957795); // rich
+    //double temp = chassisSpeeds.omegaRadiansPerSecond * (ROBOT_PERIOD_SEC * 57.2957795);
     //double temp = chassisSpeeds.omegaRadiansPerSecond * 1.1459155;
 
-    simAngle += chassisSpeeds.omegaRadiansPerSecond * (ROBOT_PERIOD_SEC * 57.2957795); // rich
+    simAngle += chassisSpeeds.omegaRadiansPerSecond * DEGREE_INCR_MULT_RS;
 
     RobotContainer.navx.setSimAngle(simAngle); // This is total angle we have rotated.
-
-    //Unmanaged.feedEnable(20); rich
-
-    //talon_FX.simulationPeriodic();
   }
 
   /**

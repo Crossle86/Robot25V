@@ -41,7 +41,7 @@ import Team4450.Robot25.Constants.ModuleConstants;
  * Represents one of the (four hopefully) Rev MAXSwerve modules on the DriveBase.
  * This class should only be used by DriveBase, never interact with it individually.
  */
-@SuppressWarnings("unused")
+//@SuppressWarnings("unused")
 public class MAXSwerveModule implements Sendable {
   private final SparkFlex drivingSparkFlex;
   private final SparkMax  turningSparkMax;
@@ -146,7 +146,7 @@ public class MAXSwerveModule implements Sendable {
     
     turningConfig.smartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit);
       
-    drivingConfig //rich
+    drivingConfig
     .signals
     .absoluteEncoderPositionAlwaysOn(true)
     .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
@@ -155,9 +155,8 @@ public class MAXSwerveModule implements Sendable {
     .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
     .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
     .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
-
   
-    turningConfig //rich
+    turningConfig
     .signals
     .absoluteEncoderPositionAlwaysOn(true)
     .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
@@ -235,7 +234,7 @@ public class MAXSwerveModule implements Sendable {
     if (RobotBase.isSimulation()) {
       turningSim.getAbsoluteEncoderSim().setPosition(desiredState.angle.getRadians());
       
-      drivingSim.iterate(desiredState.speedMetersPerSecond, 12, ROBOT_PERIOD_SEC); //rich
+      drivingSim.iterate(desiredState.speedMetersPerSecond, 12, ROBOT_PERIOD_SEC);
     }
   }
 

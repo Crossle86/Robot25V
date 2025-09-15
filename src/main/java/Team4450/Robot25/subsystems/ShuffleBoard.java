@@ -39,7 +39,7 @@ public class ShuffleBoard extends SubsystemBase
         // subsystem so the scheduler starts the command. After start, the notifier
         // runs all the time updating the DS every 25ms which is slightly slower than
         // the main thread update period.
-        updateCommand = new NotifierCommand(this::updateDS, ROBOT_PERIOD_SEC + .005, "SB", this); //rich
+        updateCommand = new NotifierCommand(this::updateDS, ROBOT_PERIOD_SEC + .005, "SB", this);
 
         this.setDefaultCommand(updateCommand);
 
@@ -66,7 +66,7 @@ public class ShuffleBoard extends SubsystemBase
         
         // Lines 1 & 2 handled elsewhere.
 
-        LCD.printLine(LCD_4, "pose x=%.1fm  y=%.1fm  deg=%.1f  total yaw=%.1f", pose.getX(), // rich
+        LCD.printLine(LCD_4, "pose x=%.1fm  y=%.1fm  deg=%.1f  total yaw=%.1f", pose.getX(),
                       pose.getY(), pose.getRotation().getDegrees(), RobotContainer.driveBase.getYaw());
 
         LCD.printLine(LCD_6, "uLX=%.2f  uLY=%.2f - uRX=%.2f  uRY=%.2f", 
