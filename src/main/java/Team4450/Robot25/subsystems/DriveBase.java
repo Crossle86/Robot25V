@@ -124,17 +124,6 @@ public class DriveBase extends SubsystemBase {
 
   public boolean slowModeEnabled = false;
 
-  // Odometry class for tracking robot pose
-  // SwerveDriveOdometry odometry = new SwerveDriveOdometry(
-  //     DriveConstants.kDriveKinematics,
-  //     Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
-  //     new SwerveModulePosition[] {
-  //         frontLeft.getPosition(),
-  //         frontRight.getPosition(),
-  //         rearLeft.getPosition(),
-  //         rearRight.getPosition()
-  //     });
-
   private final SwerveDrivePoseEstimator odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
       Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
@@ -151,10 +140,6 @@ public class DriveBase extends SubsystemBase {
         VecBuilder.fill(0.1, 0.1, Math.toRadians(1)), // std deviations of encoder states (higher = less encoders more vision)
         VecBuilder.fill(1.2, 1.2, Math.toRadians(10)) // std deviations of vision inputs (higher = less vision more enoders)
       );
-
-  //public Talon_FX talon_FX = new Talon_FX(50, DCMotor.getFalcon500(1), 1.0);
-
-  //public FXEncoder fxEncoder = new FXEncoder(talon_FX, 1.0);
 
   public DriveBase() {
     Util.consoleLog("max vel=%.2f m/s", DriveConstants.kMaxSpeedMetersPerSecond);
