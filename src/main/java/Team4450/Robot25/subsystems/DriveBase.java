@@ -121,7 +121,6 @@ public class DriveBase extends SubsystemBase {
   private SlewRateLimiter rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   private double prevTime = WPIUtilJNI.now() * 1e-6;
 
-
   public boolean slowModeEnabled = false;
 
   private final SwerveDrivePoseEstimator odometry = new SwerveDrivePoseEstimator(
@@ -261,7 +260,7 @@ public class DriveBase extends SubsystemBase {
     // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi
     // increment is made every 20 ms so radian adder would be (rads/sec) * (20/1000)
     // degree adder would be radian adder * 360/2pi
-    // so degree increment multiplier is 360/100pi = 1.1459
+    // so degree increment multiplier is 360/100pi = 1.1459155
 
     double temp = chassisSpeeds.omegaRadiansPerSecond * 1.1459155;
 
@@ -270,8 +269,6 @@ public class DriveBase extends SubsystemBase {
     RobotContainer.navx.setSimAngle(simAngle);
 
     Unmanaged.feedEnable(20);
-
-    //talon_FX.simulationPeriodic();
   }
 
   /**
