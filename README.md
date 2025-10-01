@@ -16,6 +16,12 @@ Operates the robot **USS LEVIATHAN** for FRC game **REEFSCAPE**.
 ### If RobotLib gets an update:
 Download the RobotLib.json file from the RobotLib Github repo and drop it into the vendordeps folder inside the project folder. Build the project.
 ************************************************************************************************************
+Version 25.2
+
+*   Vikaat's code as of end of DCMP plus off season testing and upgrades to simulation code.
+
+4450 Software Team, September 19 2025
+
 Version 25.1
 
 *   Moving toward functional 2025 code base.

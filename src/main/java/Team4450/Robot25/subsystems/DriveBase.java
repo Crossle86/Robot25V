@@ -5,6 +5,8 @@
 
 package Team4450.Robot25.subsystems;
 
+import static Team4450.Robot25.Constants.DEG_INCR_MULTIPLIER;
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_SEC;
 import static Team4450.Robot25.Constants.alliance;
 
 import java.util.Optional;
@@ -187,8 +189,8 @@ public class DriveBase extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Update the odometry (robot position on field).
-    // combined with poseesitmator this merges with vision
+    // Update the odometry (robot position on field) tracked by wheels
+    // combined with vision for final position on field.
     Pose2d currentPose = odometry.update(
         Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
         new SwerveModulePosition[] {
@@ -251,24 +253,16 @@ public class DriveBase extends SubsystemBase {
   @Override
   public void simulationPeriodic()
   {
-    // We are not using this call now because the REV simulation does not work
-    // correctly. Will leave the code in place in case this issue gets fixed.
-    //if (robot.isEnabled()) REVPhysicsSim.getInstance().run();
+  // Want to simulate navX gyro changing as robot turns.
+    // Information available is radians per second and this happens every robot period seconds.
+    // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi.
+    // Increment is made every robot period so radian adder would be (rads/sec) * .02.
+    // Degree adder would be radian adder * 360/2pi or 57.2957795.
+    // So degree increment multiplier for rad/sec is period * 57.2957... = 1.1459155 (for .02 period)
 
-    // want to simulate navX gyro changing as robot turns
-    // information available is radians per second and this happens every 20ms
-    // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi
-    // increment is made every 20 ms so radian adder would be (rads/sec) * (20/1000)
-    // degree adder would be radian adder * 360/2pi
-    // so degree increment multiplier is 360/100pi = 1.1459155
+    simAngle += chassisSpeeds.omegaRadiansPerSecond * DEG_INCR_MULTIPLIER; 
 
-    double temp = chassisSpeeds.omegaRadiansPerSecond * 1.1459155;
-
-    simAngle += temp;
-
-    RobotContainer.navx.setSimAngle(simAngle);
-
-    Unmanaged.feedEnable(20);
+    RobotContainer.navx.setSimAngle(simAngle); // This is total angle we have rotated.
   }
 
   /**

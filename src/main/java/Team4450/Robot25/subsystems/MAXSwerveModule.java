@@ -30,6 +30,9 @@ import Team4450.Lib.Util;
 
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
+
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_MS;
+
 import com.revrobotics.AbsoluteEncoder;
 import Team4450.Robot25.Constants.ModuleConstants;
 
@@ -142,6 +145,27 @@ public class MAXSwerveModule implements Sendable {
     drivingConfig.smartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit);
     
     turningConfig.smartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit);
+      
+    drivingConfig
+    .signals
+    .absoluteEncoderPositionAlwaysOn(true)
+    .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
+    .absoluteEncoderVelocityAlwaysOn(true)
+    .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
+    .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
+    .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
+    .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
+
+  
+    turningConfig
+    .signals
+    .absoluteEncoderPositionAlwaysOn(true)
+    .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
+    .absoluteEncoderVelocityAlwaysOn(true)
+    .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
+    .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
+    .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
+    .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
 
     // Save the SPARK configurations. If a SPARK browns out during
     // operation, it will maintain the above configurations.
@@ -154,11 +178,6 @@ public class MAXSwerveModule implements Sendable {
     
     if (RobotBase.isSimulation()) 
     {
-      // Note that the REV simulation does not work correctly. We have hacked
-      // a solution where we drive the sim through our code, not by reading the
-      // REV simulated encoder position and velocity, which are incorrect. However, 
-      // registering the motor controller with the REV sim is still needed.
-
       turningSim = new SparkSim(turningSparkMax, DCMotor.getNeo550(1));
   
       drivingSim = new SparkSim(drivingSparkFlex, DCMotor.getNeoVortex(1));
@@ -217,9 +236,6 @@ public class MAXSwerveModule implements Sendable {
 
     // Optimize the reference state to avoid spinning further than 90 degrees.
     desiredState.optimize(new Rotation2d(turningEncoder.getPosition()));
-
-    //rich
-    desiredState.cosineScale(new Rotation2d(turningEncoder.getPosition()));
 
     // Command driving and turning SPARK controllers towards their respective setpoints.
     drivingPIDController.setReference(desiredState.speedMetersPerSecond, SparkMax.ControlType.kVelocity);

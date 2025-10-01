@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "VR25-03.02.25";
+	public static String		PROGRAM_NAME = "ORF25-09.30.25";
 
 	public static Robot			robot;
 
@@ -39,6 +39,12 @@ public final class Constants
 	public static String					 eventName, gameMessage;
 	    
     public static String                     functionMarker = "-".repeat(30);
+    
+    public static final double  ROBOT_PERIOD_SEC = .02;
+    public static final int     ROBOT_PERIOD_MS = 20;
+
+    // See DriveBase SimulationPeriodic for an explanation of this constant.
+    public static final double  DEG_INCR_MULTIPLIER = ROBOT_PERIOD_SEC * 57.2957795;
 
 	// Non-drive base motor controller port assignments
     public static final int     CORAL_MANIPULATOR = 9;
@@ -140,10 +146,10 @@ public final class Constants
         // Driving Parameters - These are the maximum capable speeds of
         // the robot.
 
-        public static final double kMaxSpeedMetersPerSecond = 4.92;  // 1.0; Speed limited for demos.
+        public static final double kMaxSpeedMetersPerSecond = 4.92;  // 1.0; Speed limit for demos.
         //public static final double kMaxSpeedMetersPerSecond = ModuleConstants.kDriveWheelFreeSpeedRps; // max speed
         public static final double kMaxAngularSpeed = 1.5 * (2 * Math.PI); // radians per second (1.5 rots / sec)
-        public static final double kSlowModeFactor = .20; // 50% of normal.
+        public static final double kSlowModeFactor = .20; // 20% of normal.
         public static final double kRotSlowModeFactor = .20; // 20% of normal.
 
         // For vision testing only!!!
