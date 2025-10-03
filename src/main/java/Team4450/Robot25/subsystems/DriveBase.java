@@ -6,12 +6,10 @@
 package Team4450.Robot25.subsystems;
 
 import static Team4450.Robot25.Constants.DEG_INCR_MULTIPLIER;
-import static Team4450.Robot25.Constants.ROBOT_PERIOD_SEC;
 import static Team4450.Robot25.Constants.alliance;
 
 import java.util.Optional;
 
-import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.studica.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -29,11 +27,6 @@ import Team4450.Robot25.AdvantageScope;
 import Team4450.Robot25.Constants;
 import Team4450.Robot25.RobotContainer;
 import Team4450.Lib.Util;
-import Team4450.Lib.FXEncoder;
-import Team4450.Lib.Talon_FX;
-
-import edu.wpi.first.hal.SimDouble;
-import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -45,7 +38,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -244,7 +236,6 @@ public class DriveBase extends SubsystemBase {
     setField2dModulePoses();
 
     AdvantageScope.getInstance().setSwerveModules(frontLeft, frontRight, rearLeft, rearRight);
-
   }
 
   /**
@@ -253,7 +244,7 @@ public class DriveBase extends SubsystemBase {
   @Override
   public void simulationPeriodic()
   {
-  // Want to simulate navX gyro changing as robot turns.
+    // Want to simulate navX gyro changing as robot turns.
     // Information available is radians per second and this happens every robot period seconds.
     // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi.
     // Increment is made every robot period so radian adder would be (rads/sec) * .02.

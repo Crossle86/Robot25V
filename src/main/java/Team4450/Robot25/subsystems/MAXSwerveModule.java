@@ -10,10 +10,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.spark.SparkSim;
 import com.revrobotics.spark.SparkMax;
@@ -32,6 +32,7 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 
 import static Team4450.Robot25.Constants.ROBOT_PERIOD_MS;
+import static Team4450.Robot25.Constants.ROBOT_PERIOD_SEC;
 
 import com.revrobotics.AbsoluteEncoder;
 import Team4450.Robot25.Constants.ModuleConstants;
@@ -40,8 +41,8 @@ import Team4450.Robot25.Constants.ModuleConstants;
  * Represents one of the (four hopefully) Rev MAXSwerve modules on the DriveBase.
  * This class should only be used by DriveBase, never interact with it individually.
  */
-@SuppressWarnings("unused")
-public class MAXSwerveModule implements Sendable {
+//@SuppressWarnings("unused")
+public class MAXSwerveModule extends SubsystemBase { //implements Sendable {
   private final SparkFlex drivingSparkFlex;
   private final SparkMax  turningSparkMax;
 
@@ -56,9 +57,10 @@ public class MAXSwerveModule implements Sendable {
   private final SparkClosedLoopController drivingPIDController;
   private final SparkClosedLoopController turningPIDController;
 
+  private SwerveModuleState lastDesiredState = null;
+
   private double            chassisAngularOffset = 0, lastDrivePIDReference = 0;
 
-  private double            currentSimVelocity = 0, currentSimPosition = 0, currentSimAngle = 0;
   public String             moduleLocation;
   private Pose2d            pose;
   private Translation2d     translation2d;
@@ -147,25 +149,24 @@ public class MAXSwerveModule implements Sendable {
     turningConfig.smartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit);
       
     drivingConfig
-    .signals
-    .absoluteEncoderPositionAlwaysOn(true)
-    .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
-    .absoluteEncoderVelocityAlwaysOn(true)
-    .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
-    .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
-    .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
-    .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
+      .signals
+      .absoluteEncoderPositionAlwaysOn(true)
+      .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
+      .absoluteEncoderVelocityAlwaysOn(true)
+      .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
+      .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
+      .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
+      .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
 
-  
     turningConfig
-    .signals
-    .absoluteEncoderPositionAlwaysOn(true)
-    .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
-    .absoluteEncoderVelocityAlwaysOn(true)
-    .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
-    .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
-    .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
-    .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
+      .signals
+      .absoluteEncoderPositionAlwaysOn(true)
+      .absoluteEncoderPositionPeriodMs(ROBOT_PERIOD_MS) 
+      .absoluteEncoderVelocityAlwaysOn(true)
+      .absoluteEncoderVelocityPeriodMs(ROBOT_PERIOD_MS) 
+      .appliedOutputPeriodMs(ROBOT_PERIOD_MS) 
+      .busVoltagePeriodMs(ROBOT_PERIOD_MS) 
+      .outputCurrentPeriodMs(ROBOT_PERIOD_MS); 
 
     // Save the SPARK configurations. If a SPARK browns out during
     // operation, it will maintain the above configurations.
@@ -193,12 +194,8 @@ public class MAXSwerveModule implements Sendable {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
 
-    if (RobotBase.isReal())
       return new SwerveModuleState(drivingEncoder.getVelocity(),
           new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset));
-    else
-      return new SwerveModuleState(currentSimVelocity,
-          new Rotation2d(currentSimAngle - chassisAngularOffset));
   } 
 
   /**
@@ -209,18 +206,10 @@ public class MAXSwerveModule implements Sendable {
   public SwerveModulePosition getPosition() {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
-    SwerveModulePosition  position;
 
-    if (RobotBase.isReal())
-      position = new SwerveModulePosition(
+    return new SwerveModulePosition(
           drivingEncoder.getPosition(),
           new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset));
-    else
-      position = new SwerveModulePosition(
-          currentSimPosition,
-          new Rotation2d(currentSimAngle - chassisAngularOffset));
-    
-    return position;
   }
 
   /**
@@ -239,17 +228,33 @@ public class MAXSwerveModule implements Sendable {
 
     // Command driving and turning SPARK controllers towards their respective setpoints.
     drivingPIDController.setReference(desiredState.speedMetersPerSecond, SparkMax.ControlType.kVelocity);
+    
     lastDrivePIDReference = desiredState.speedMetersPerSecond;
     
     turningPIDController.setReference(desiredState.angle.getRadians(), SparkMax.ControlType.kPosition);
 
-    currentSimAngle = desiredState.angle.getRadians();
+    lastDesiredState = desiredState;
 
-    currentSimVelocity = desiredState.speedMetersPerSecond;
+    // Update motor simulations.
+    if (RobotBase.isSimulation()) 
+    {
+      // turningSim.getAbsoluteEncoderSim().setPosition(desiredState.angle.getRadians());
+      
+      // drivingSim.iterate(desiredState.speedMetersPerSecond, 12, ROBOT_PERIOD_SEC);
+    }
+  }
 
-    double distancePer20Ms = currentSimVelocity / 50.0;
-
-    currentSimPosition += distancePer20Ms;
+  /**
+   * Called on every scheduler loop when in simulation.
+   */
+  @Override  public void simulationPeriodic(){
+    // Update motor simulations.
+    if (lastDesiredState != null)
+    {
+      turningSim.getAbsoluteEncoderSim().setPosition(lastDesiredState.angle.getRadians());
+      
+      drivingSim.iterate(lastDesiredState.speedMetersPerSecond, 12, ROBOT_PERIOD_SEC);
+    }
   }
 
   /** Zeroes all the SwerveModule encoders. */
@@ -288,7 +293,7 @@ public class MAXSwerveModule implements Sendable {
       if (RobotBase.isReal())
           rot = new Rotation2d(turningEncoder.getPosition());
       else
-          rot = new Rotation2d(currentSimAngle - chassisAngularOffset);
+          rot = new Rotation2d(turningEncoder.getPosition() - chassisAngularOffset);
 
       return rot;
   }
@@ -323,10 +328,10 @@ public class MAXSwerveModule implements Sendable {
    */
   public double getVelocity()
   {
-    if (RobotBase.isReal())
+    //if (RobotBase.isReal())
       return drivingEncoder.getVelocity();
-    else
-      return currentSimVelocity;
+    //else
+    //  return currentSimVelocity;
   }
 
   @Override
@@ -337,10 +342,8 @@ public class MAXSwerveModule implements Sendable {
     builder.addDoubleProperty("1 Cur pos dist", () -> getPosition().distanceMeters, null);
     builder.addDoubleProperty("2 Cur pos angle", () -> getPosition().angle.getDegrees(), null);
     builder.addStringProperty("3 Pose", () -> getPose().toString(), null);
-    builder.addDoubleProperty("4 Velocity SP", () -> currentSimVelocity, null);
-    builder.addDoubleProperty("5 Steer angle SP", () -> Math.toDegrees(currentSimAngle), null);
-    builder.addDoubleProperty("6 Actual velocity", () -> getVelocity(), null);
-    builder.addDoubleProperty("7 Actual steer sngle", () -> getAngle2d().getDegrees(), null);
-    builder.addDoubleProperty("8 Drive PID reference", () -> lastDrivePIDReference, null);
+    builder.addDoubleProperty("4 Velocity", () -> getVelocity(), null);
+    builder.addDoubleProperty("5 Steer sngle", () -> getAngle2d().getDegrees(), null);
+    builder.addDoubleProperty("6 Drive PID reference", () -> lastDrivePIDReference, null);
 	}   
 }
